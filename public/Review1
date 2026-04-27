@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordBridge - 3 Level Review</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .review-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .back-link {
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        .level-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+        .level-1 { background: #667eea; color: white; }
+        .level-2 { background: #48bb78; color: white; }
+        .level-3 { background: #ed8936; color: white; }
+        .progress-bar {
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 8px;
+            margin-bottom: 15px;
+        }
+        .progress-fill {
+            background: #48bb78;
+            border-radius: 10px;
+            height: 8px;
+            width: 0%;
+        }
+        .word-counter {
+            text-align: right;
+            color: #718096;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+        .question-text {
+            font-size: 18px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        button {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+        }
+        button:hover {
+            background: #38a169;
+        }
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            display: none;
+        }
+        .feedback.correct {
+            background: #c6f6d5;
+            color: #22543d;
+            display: block;
+        }
+        .feedback.incorrect {
+            background: #fed7d7;
+            color: #742a2a;
+            display: block;
+        }
+        .next-btn {
+            background: #667eea;
+            display: none;
+        }
+        .hint {
+            margin-top: 12px;
+            padding: 8px;
+            background: #f7fafc;
+            border-radius: 10px;
+            color: #718096;
+            font-size: 12px;
+        }
+        .stats-grid {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            flex: 1;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .stat-label {
+            color: #718096;
+            font-size: 12px;
+        }
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="profile.html" class="back-link">← Back to Profile</a>
+    
+    <div id="reviewContainer">
+        <!-- Review content goes here -->
+    </div>
+</div>
+
+<script>
+
+// Words to review (hardcoded for demo)
+var words = [
+    { word: "analyze", definition: "to examine something in detail", level: 1 },
+    { word: "context", definition: "the situation around something", level: 1 },
+    { word: "significant", definition: "important or noticeable", level: 2 },
+    { word: "data", definition: "facts and information", level: 1 },
+    { word: "approach", definition: "a way of dealing with something", level: 2 },
+    { word: "comprehensive", definition: "complete and including everything", level: 3 }
+];
+
+// Review state
+var reviewWords = [];
+var currentIndex = 0;
+var currentWordObj = null;
+var currentQuestionType = null;
+var results = [];
+var score = 0;
+
+// ============================================
+// QUESTION FUNCTIONS FOR EACH LEVEL
+// ============================================
+
+function getQuestionForWord(wordObj, level, questionType) {
+    var word = wordObj.word;
+    var definition = wordObj.definition;
+    
+    if (level === 1) {
+        if (questionType === "definition") {
+            return {
+                text: "What does \"" + word + "\" mean?",
+                check: function(answer) {
+                    return answer.toLowerCase().indexOf(definition.toLowerCase()) !== -1;
+                },
+                hint: "Type the definition"
+            };
+        } else if (questionType === "fillBlank") {
+            return {
+                text: "Complete: Scientists need to ___ the data before concluding.",
+                check: function(answer) {
+                    return answer.toLowerCase().trim() === word.toLowerCase();
+                },
+                hint: "Type: " + word
+            };
+        } else {
+            return {
+                text: "What does \"" + word + "\" mean? (Type your answer)",
+                check: function(answer) {
+                    return answer.toLowerCase().indexOf(definition.toLowerCase()) !== -1;
+                },
+                hint: "Type the definition"
+            };
+        }
+    } 
+    else if (level === 2) {
+        if (questionType === "sentence") {
+            return {
+                text: "Complete this sentence with \"" + word + "\":\n\nThe researcher decided to ___ the results.",
+                check: function(answer) {
+                    return answer.toLowerCase().indexOf(word.toLowerCase()) !== -1;
+                },
+                hint: "Use the word: " + word
+            };
+        } else {
+            return {
+                text: "Write a sentence using the word \"" + word + "\":",
+                check: function(answer) {
+                    return answer.length > 10 && answer.toLowerCase().indexOf(word.toLowerCase()) !== -1;
+                },
+                hint: "Write a sentence with " + word
+            };
+        }
+    } 
+    else {
+        // Level 3
+        return {
+            text: "Write a professional sentence using \"" + word + "\":",
+            check: function(answer) {
+                return answer.length > 15 && answer.toLowerCase().indexOf(word.toLowerCase()) !== -1;
+            },
+            hint: "Make it sound professional"
+        };
+    }
+}
+
+// Get random question type based on level
+function getRandomQuestionType(level) {
+    if (level === 1) {
+        var types = ["definition", "fillBlank", "definition"];
+        var randomIndex = Math.floor(Math.random() * types.length);
+        return types[randomIndex];
+    } else if (level === 2) {
+        var types = ["sentence", "sentence"];
+        var randomIndex = Math.floor(Math.random() * types.length);
+        return types[randomIndex];
+    } else {
+        return "professional";
+    }
+}
+
+// Get level badge class and text
+function getLevelInfo(level) {
+    if (level === 1) return { class: "level-1", text: "Level 1 - Basic" };
+    if (level === 2) return { class: "level-2", text: "Level 2 - Intermediate" };
+    return { class: "level-3", text: "Level 3 - Advanced" };
+}
+
+// Start the review
+function startReview() {
+    // Shuffle words
+    reviewWords = [];
+    for (var i = 0; i < words.length; i++) {
+        reviewWords.push(words[i]);
+    }
+    // Simple shuffle
+    for (var i = reviewWords.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = reviewWords[i];
+        reviewWords[i] = reviewWords[j];
+        reviewWords[j] = temp;
+    }
+    
+    currentIndex = 0;
+    results = [];
+    score = 0;
+    showNextWord();
+}
+
+// Show current word
+function showNextWord() {
+    if (currentIndex >= reviewWords.length) {
+        showResults();
+        return;
+    }
+    
+    currentWordObj = reviewWords[currentIndex];
+    var level = currentWordObj.level;
+    var questionType = getRandomQuestionType(level);
+    currentQuestionType = getQuestionForWord(currentWordObj, level, questionType);
+    
+    displayReview();
+}
+
+// Display the review card
+function displayReview() {
+    var container = document.getElementById('reviewContainer');
+    var progress = (currentIndex / reviewWords.length) * 100;
+    var levelInfo = getLevelInfo(currentWordObj.level);
+    
+    var html = '';
+    html += '<div class="review-card">';
+    html += '<div class="progress-bar"><div class="progress-fill" style="width: ' + progress + '%"></div></div>';
+    html += '<div class="word-counter">Word ' + (currentIndex + 1) + ' of ' + reviewWords.length + '</div>';
+    html += '<div class="level-badge ' + levelInfo.class + '">' + levelInfo.text + '</div>';
+    html += '<div class="question-text">' + currentQuestionType.text.replace(/\n/g, '<br>') + '</div>';
+    html += '<textarea id="answerInput" rows="3" placeholder="Type your answer here..."></textarea>';
+    html += '<button onclick="checkAnswer()">Check Answer</button>';
+    html += '<div id="feedback" class="feedback"></div>';
+    html += '<div class="hint">💡 Hint: ' + currentQuestionType.hint + '</div>';
+    html += '<button id="nextBtn" class="next-btn" onclick="nextWord()">Next Word →</button>';
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+// Check user's answer
+function checkAnswer() {
+    var answerInput = document.getElementById('answerInput');
+    var answer = answerInput.value;
+    var isCorrect = currentQuestionType.check(answer);
+    
+    var feedbackDiv = document.getElementById('feedback');
+    var nextBtn = document.getElementById('nextBtn');
+    var checkBtn = document.querySelector('button[onclick="checkAnswer()"]');
+    
+    if (isCorrect) {
+        feedbackDiv.innerHTML = '✅ Correct! "' + currentWordObj.definition + '"';
+        feedbackDiv.className = 'feedback correct';
+        score++;
+        results.push({ word: currentWordObj.word, level: currentWordObj.level, correct: true });
+    } else {
+        feedbackDiv.innerHTML = '❌ Incorrect. "' + currentWordObj.word + '" means: ' + currentWordObj.definition;
+        feedbackDiv.className = 'feedback incorrect';
+        results.push({ word: currentWordObj.word, level: currentWordObj.level, correct: false });
+    }
+    
+    // Disable check button
+    if (checkBtn) checkBtn.disabled = true;
+    // Disable textarea
+    answerInput.disabled = true;
+    // Show next button
+    nextBtn.style.display = 'block';
+}
+
+// Move to next word
+function nextWord() {
+    currentIndex++;
+    showNextWord();
+}
+
+// Show final results
+function showResults() {
+    var total = reviewWords.length;
+    var percentage = Math.round((score / total) * 100);
+    
+    // Count by level
+    var level1Correct = 0, level1Total = 0;
+    var level2Correct = 0, level2Total = 0;
+    var level3Correct = 0, level3Total = 0;
+    
+    for (var i = 0; i < results.length; i++) {
+        var r = results[i];
+        if (r.level === 1) {
+            level1Total++;
+            if (r.correct) level1Correct++;
+        } else if (r.level === 2) {
+            level2Total++;
+            if (r.correct) level2Correct++;
+        } else if (r.level === 3) {
+            level3Total++;
+            if (r.correct) level3Correct++;
+        }
+    }
+    
+    var incorrectWords = [];
+    for (var i = 0; i < results.length; i++) {
+        if (!results[i].correct) {
+            incorrectWords.push(results[i].word);
+        }
+    }
+    
+    var container = document.getElementById('reviewContainer');
+    var html = '';
+    html += '<div class="review-card" style="text-align:center">';
+    html += '<h2>🎉 Review Complete!</h2>';
+    html += '<div style="font-size:48px; font-weight:bold; color:#48bb78; margin:20px 0;">' + percentage + '%</div>';
+    html += '<p>You got ' + score + ' out of ' + total + ' correct</p>';
+    
+    html += '<div class="stats-grid">';
+    html += '<div class="stat-card"><div class="stat-number">' + level1Correct + '/' + level1Total + '</div><div class="stat-label">Level 1</div></div>';
+    html += '<div class="stat-card"><div class="stat-number">' + level2Correct + '/' + level2Total + '</div><div class="stat-label">Level 2</div></div>';
+    html += '<div class="stat-card"><div class="stat-number">' + level3Correct + '/' + level3Total + '</div><div class="stat-label">Level 3</div></div>';
+    html += '</div>';
+    
+    if (incorrectWords.length > 0) {
+        html += '<h5>Words to review again:</h5>';
+        for (var i = 0; i < incorrectWords.length; i++) {
+            html += '<p>❌ ' + incorrectWords[i] + '</p>';
+        }
+    } else {
+        html += '<p>🎉 All correct! Great job!</p>';
+    }
+    
+    html += '<button onclick="startReview()" style="margin-top:20px;">Start New Review</button>';
+    html += '<button onclick="window.location.href=\'profile.html\'" style="background:#667eea; margin-left:10px;">Back to Profile</button>';
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+// Start everything when page loads
+startReview();
+</script>
+
+</body>
+</html>
