@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordBridge - 3 Level Review</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .review-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .back-link {
+            color: white;
+            text-decoration: none;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        .level-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .level-1 { background: #667eea; color: white; }
+        .level-2 { background: #48bb78; color: white; }
+        .level-3 { background: #ed8936; color: white; }
+        .progress-bar {
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 8px;
+            margin-bottom: 15px;
+        }
+        .progress-fill {
+            background: #48bb78;
+            border-radius: 10px;
+            height: 8px;
+            width: 0%;
+        }
+        .word-counter {
+            text-align: right;
+            color: #718096;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+        .question-text {
+            font-size: 18px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .review-type {
+            font-size: 11px;
+            color: #a0aec0;
+            margin-bottom: 8px;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+        .feedback {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 10px;
+            display: none;
+        }
+        .feedback.correct {
+            background: #c6f6d5;
+            color: #22543d;
+            display: block;
+        }
+        .feedback.incorrect {
+            background: #fed7d7;
+            color: #742a2a;
+            display: block;
+        }
+        .next-btn {
+            background: #667eea;
+            display: none;
+            margin-left: 10px;
+        }
+        .hint {
+            margin-top: 12px;
+            padding: 8px;
+            background: #f7fafc;
+            border-radius: 8px;
+            color: #718096;
+            font-size: 12px;
+        }
+        .option-btn {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .stats {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            flex: 1;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="profile.html" class="back-link">← Back to Profile</a>
+    <div id="reviewContainer"></div>
+</div>
+
+<script>
+
+var wordsList = [
+    { word: "analyze", definition: "to examine something in detail", level: 1 },
+    { word: "context", definition: "the situation around something", level: 1 },
+    { word: "data", definition: "facts and information", level: 1 },
+    { word: "significant", definition: "important or noticeable", level: 2 },
+    { word: "approach", definition: "a way of dealing with something", level: 2 },
+    { word: "comprehensive", definition: "complete and including everything", level: 3 }
+];
+
+
+function getDefinitionQuestion(wordObj) {
+    return {
+        type: "Definition",
+        text: "What does \"" + wordObj.word + "\" mean?",
+        check: function(answer) {
+            return answer.toLowerCase().indexOf(wordObj.definition.toLowerCase()) !== -1;
+        },
+        hint: "Type the definition"
+    };
+}
+
+function getFillBlankQuestion(wordObj) {
+    return {
+        type: "Fill in Blank",
+        text: "Complete: Scientists need to ___ the data carefully.",
+        check: function(answer) {
+            return answer.toLowerCase().trim() === wordObj.word.toLowerCase();
+        },
+        hint: "Type: " + wordObj.word
+    };
+}
+
+function getMultipleChoiceQuestion(wordObj) {
+    var fakeDefs = ["to ignore completely", "to guess randomly", "to forget", "to skip over"];
+    var options = [wordObj.definition];
+    for (var i = 0; i < 3; i++) {
+        options.push(fakeDefs[i]);
+    }
+    // Shuffle
+    for (var i = options.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = options[i];
+        options[i] = options[j];
+        options[j] = temp;
+    }
+    
+    return {
+        type: "Multiple Choice",
+        text: "Choose the correct definition of \"" + wordObj.word + "\":",
+        options: options,
+        check: function(answer) {
+            return answer === wordObj.definition;
+        },
+        hint: "Pick the correct meaning"
+    };
+}
+
+function getSentenceCompletionQuestion(wordObj) {
+    return {
+        type: "Sentence Completion",
+        text: "Complete: The researcher decided to ___ the results before publishing.",
+        check: function(answer) {
+            return answer.toLowerCase().trim() === wordObj.word.toLowerCase();
+        },
+        hint: "Type: " + wordObj.word
+    };
+}
+
+function getSynonymQuestion(wordObj) {
+    var synonyms = ["examine", "study", "inspect"];
+    var options = [synonyms[0], synonyms[1], "ignore", "forget"];
+    for (var i = options.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = options[i];
+        options[i] = options[j];
+        options[j] = temp;
+    }
+    
+    return {
+        type: "Synonym Match",
+        text: "Which word is a synonym for \"" + wordObj.word + "\"?",
+        options: options,
+        check: function(answer) {
+            return answer === "examine" || answer === "study" || answer === "inspect";
+        },
+        hint: "Choose the word with similar meaning"
+    };
+}
+
+function getRealWorldQuestion(wordObj) {
+    return {
+        type: "Real World",
+        text: "Write a professional sentence using \"" + wordObj.word + "\":",
+        check: function(answer) {
+            return answer.length > 10 && answer.toLowerCase().indexOf(wordObj.word.toLowerCase()) !== -1;
+        },
+        hint: "Write a complete sentence"
+    };
+}
+
+function getCollocationQuestion(wordObj) {
+    var collocations = ["data", "results", "information"];
+    var options = [collocations[0], collocations[1], collocations[2], "nothing"];
+    for (var i = options.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = options[i];
+        options[i] = options[j];
+        options[j] = temp;
+    }
+    
+    return {
+        type: "Collocation",
+        text: "Which word pairs naturally with \"" + wordObj.word + "\"?",
+        options: options,
+        check: function(answer) {
+            return answer === "data" || answer === "results" || answer === "information";
+        },
+        hint: "Choose what you would " + wordObj.word
+    };
+}
+
+
+function getRandomQuestion(wordObj) {
+    var level = wordObj.level;
+    var random = Math.floor(Math.random() * 3);
+    
+    if (level === 1) {
+        if (random === 0) return getDefinitionQuestion(wordObj);
+        if (random === 1) return getFillBlankQuestion(wordObj);
+        return getMultipleChoiceQuestion(wordObj);
+    }
+    else if (level === 2) {
+        if (random === 0) return getSentenceCompletionQuestion(wordObj);
+        if (random === 1) return getSynonymQuestion(wordObj);
+        return getRealWorldQuestion(wordObj);
+    }
+    else {
+        if (random === 0) return getRealWorldQuestion(wordObj);
+        if (random === 1) return getCollocationQuestion(wordObj);
+        return getDefinitionQuestion(wordObj);
+    }
+}
+
+
+var reviewWords = [];
+var currentIndex = 0;
+var currentWord = null;
+var currentQuestion = null;
+var results = [];
+var score = 0;
+
+function shuffleArray(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+    }
+    return arr;
+}
+
+function startReview() {
+    reviewWords = shuffleArray([].concat(wordsList));
+    currentIndex = 0;
+    results = [];
+    score = 0;
+    showNextWord();
+}
+
+function getLevelClass(level) {
+    if (level === 1) return "level-1";
+    if (level === 2) return "level-2";
+    return "level-3";
+}
+
+function getLevelText(level) {
+    if (level === 1) return "Level 1 - Basic";
+    if (level === 2) return "Level 2 - Intermediate";
+    return "Level 3 - Advanced";
+}
+
+function showNextWord() {
+    if (currentIndex >= reviewWords.length) {
+        showResults();
+        return;
+    }
+    
+    currentWord = reviewWords[currentIndex];
+    currentQuestion = getRandomQuestion(currentWord);
+    displayReview();
+}
+
+function displayReview() {
+    var container = document.getElementById('reviewContainer');
+    var progress = (currentIndex / reviewWords.length) * 100;
+    var levelClass = getLevelClass(currentWord.level);
+    var levelText = getLevelText(currentWord.level);
+    
+    var html = '<div class="review-card">';
+    html += '<div class="progress-bar"><div class="progress-fill" style="width: ' + progress + '%"></div></div>';
+    html += '<div class="word-counter">Word ' + (currentIndex + 1) + ' of ' + reviewWords.length + '</div>';
+    html += '<div class="level-badge ' + levelClass + '">' + levelText + '</div>';
+    html += '<div class="review-type">📝 ' + currentQuestion.type + '</div>';
+    html += '<div class="question-text">' + currentQuestion.text + '</div>';
+    
+    // If multiple choice
+    if (currentQuestion.options) {
+        html += '<div id="optionsDiv">';
+        for (var i = 0; i < currentQuestion.options.length; i++) {
+            var opt = currentQuestion.options[i];
+            html += '<button class="option-btn" onclick="submitAnswer(\'' + opt.replace(/'/g, "\\'") + '\')">' + opt + '</button>';
+        }
+        html += '</div>';
+    } else {
+        html += '<textarea id="answerInput" rows="3" placeholder="Type your answer here..."></textarea>';
+        html += '<button onclick="submitAnswerText()">Check Answer</button>';
+    }
+    
+    html += '<div id="feedback" class="feedback"></div>';
+    html += '<div class="hint">💡 Hint: ' + currentQuestion.hint + '</div>';
+    html += '<button id="nextBtn" class="next-btn" onclick="nextWord()">Next Word →</button>';
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+function submitAnswerText() {
+    var answerInput = document.getElementById('answerInput');
+    var answer = answerInput.value;
+    var isCorrect = currentQuestion.check(answer);
+    handleAnswer(isCorrect, answer);
+}
+
+function submitAnswer(selected) {
+    var isCorrect = currentQuestion.check(selected);
+    handleAnswer(isCorrect, selected);
+}
+
+function handleAnswer(isCorrect, userAnswer) {
+    var feedbackDiv = document.getElementById('feedback');
+    var nextBtn = document.getElementById('nextBtn');
+    
+    if (isCorrect) {
+        feedbackDiv.innerHTML = '✅ Correct! "' + currentWord.definition + '"';
+        feedbackDiv.className = 'feedback correct';
+        score++;
+        results.push({ word: currentWord.word, level: currentWord.level, correct: true });
+    } else {
+        feedbackDiv.innerHTML = '❌ Incorrect. "' + currentWord.word + '" means: ' + currentWord.definition;
+        feedbackDiv.className = 'feedback incorrect';
+        results.push({ word: currentWord.word, level: currentWord.level, correct: false });
+    }
+    
+    // Disable buttons
+    var btns = document.querySelectorAll('.option-btn');
+    for (var i = 0; i < btns.length; i++) {
+        btns[i].disabled = true;
+    }
+    var submitBtn = document.querySelector('button[onclick="submitAnswerText()"]');
+    if (submitBtn) submitBtn.disabled = true;
+    var textarea = document.getElementById('answerInput');
+    if (textarea) textarea.disabled = true;
+    
+    nextBtn.style.display = 'inline-block';
+}
+
+function nextWord() {
+    currentIndex++;
+    showNextWord();
+}
+
+function showResults() {
+    var total = reviewWords.length;
+    var percentage = Math.round((score / total) * 100);
+    
+    var level1Correct = 0, level1Total = 0;
+    var level2Correct = 0, level2Total = 0;
+    var level3Correct = 0, level3Total = 0;
+    
+    for (var i = 0; i < results.length; i++) {
+        var r = results[i];
+        if (r.level === 1) {
+            level1Total++;
+            if (r.correct) level1Correct++;
+        } else if (r.level === 2) {
+            level2Total++;
+            if (r.correct) level2Correct++;
+        } else if (r.level === 3) {
+            level3Total++;
+            if (r.correct) level3Correct++;
+        }
+    }
+    
+    var incorrectWords = [];
+    for (var i = 0; i < results.length; i++) {
+        if (!results[i].correct) {
+            incorrectWords.push(results[i].word);
+        }
+    }
+    
+    var container = document.getElementById('reviewContainer');
+    var html = '<div class="review-card" style="text-align:center">';
+    html += '<h2>🎉 Review Complete!</h2>';
+    html += '<div style="font-size: 48px; font-weight: bold; color: #48bb78; margin: 20px 0;">' + percentage + '%</div>';
+    html += '<p>You got ' + score + ' out of ' + total + ' correct</p>';
+    
+    html += '<div class="stats">';
+    html += '<div class="stat-box"><div class="stat-number">' + level1Correct + '/' + level1Total + '</div><div>Level 1</div></div>';
+    html += '<div class="stat-box"><div class="stat-number">' + level2Correct + '/' + level2Total + '</div><div>Level 2</div></div>';
+    html += '<div class="stat-box"><div class="stat-number">' + level3Correct + '/' + level3Total + '</div><div>Level 3</div></div>';
+    html += '</div>';
+    
+    if (incorrectWords.length > 0) {
+        html += '<h4>Words to review again:</h4>';
+        for (var i = 0; i < incorrectWords.length; i++) {
+            html += '<p>❌ ' + incorrectWords[i] + '</p>';
+        }
+    } else {
+        html += '<p>🎉 All correct! Great job!</p>';
+    }
+    
+    html += '<button onclick="startReview()" style="margin-top:20px;">Start New Review</button>';
+    html += '<button onclick="window.location.href=\'profile.html\'" style="background:#667eea; margin-left:10px;">Back to Profile</button>';
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+// Start the review
+startReview();
+</script>
+
+</body>
+</html>
