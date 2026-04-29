@@ -14,7 +14,71 @@
             background: linear-gradient(135deg, #1b4a5e 0%, #2e7a6e 100%);
             color: #1b4a5e;
         }
+        .back-outer {
+            margin-bottom: 12px;
+        }
         
+        .back-arrow {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 10px 16px;
+            border-radius: 50px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            backdrop-filter: blur(4px);
+        }
+        
+        .back-arrow:hover {
+            background: rgba(255,255,255,0.35);
+            transform: translateX(-3px);
+        }
+        
+        /* Navigation */
+        .nav-bar {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 60px;
+            padding: 0.8rem 1.8rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .nav-logo {
+            font-weight: 700;
+            color: #1B4A5E;
+            font-size: 1.3rem;
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #5A6B7A;
+            font-weight: 500;
+            padding: 0.5rem 1.2rem;
+            border-radius: 30px;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+        
+        .nav-links a:hover {
+            background: #FFB74D;
+            color: #1B4A5E;
+        }
         h1 { 
             
             color: #e8f4fc;;
@@ -150,6 +214,21 @@
 <body>
 
     
+    <div class="back-outer">
+        <button class="back-arrow" onclick="history.back()">←</button>
+    </div>
+    
+    <!-- Navigation -->
+    <div class="nav-bar">
+        <a href="index.html" class="nav-logo">📖 WordBridge</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="review.html">Review</a>
+            <a href="tutorial.html">Tutorial</a>
+            <a href="profile.html" class="profile-badge">👤 Profile</a>
+        </div>
+    </div>
+
     <a href="words.html" style="color: #f0f0f0; text-decoration: none; margin-bottom: 1rem; display: inline-block;">← Back to word list</a>
     
     <h1>Results for: <span class="word-highlight" id="word"></span></h1>
