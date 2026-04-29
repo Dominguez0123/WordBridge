@@ -30,6 +30,33 @@
       margin: 0 auto;
     }
 
+
+/* Back button above nav */
+.back-outer {
+      margin-bottom: 12px;
+    }
+
+    .back-arrow {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 10px 16px;
+      border-radius: 50px;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      backdrop-filter: blur(4px);
+    }
+
+    .back-arrow:hover {
+      background: rgba(255,255,255,0.35);
+      transform: translateX(-3px);
+    }
+
+
     .top-bar {
       display: flex;
       justify-content: space-between;
@@ -255,6 +282,11 @@
 </head>
 <body>
   <div class="page-container">
+
+    <div class="back-outer">
+      <button class="back-arrow" onclick="history.back()">←</button>
+    </div>
+
     <div class="top-bar">
       <div class="logo">📚 WordBridge</div>
       <div class="nav-links">
