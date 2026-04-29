@@ -101,9 +101,41 @@
             opacity: 1;
             text-decoration: underline;
         }
+
+
+
+        .profile-link {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    padding: 0.5rem 1rem;
+    border-radius: 40px;
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.profile-link:hover {
+    background: rgba(255,255,255,0.3);
+    transform: translateY(-2px);
+}
+
+.profile-icon {
+    font-size: 1.2rem;
+}
     </style>
 </head>
 <body>
+    <a href="profile.html" class="profile-link">
+        <span class="profile-icon">👤</span>
+        My Profile
+    </a>
     <div class="container">
         <div class="logo">WordBridge</div>
         <div class="tagline">Master academic English through focused practice</div>
@@ -113,15 +145,13 @@
         <button class="cta-button" onclick="window.location.href='words.html'">
             Start Learning Now →
         </button>
-
-
-        <div class="footer-links">
-            <a href="tutorial.html">Tutorial</a>
-            <a href="review.html">Review</a>
-            
-        </div>
         
-
+        <div class="footer-links">
+            <a href="signup.html">Sign Up</a>
+            <a href="login.html">Login</a>
+            <a href="review.html">Review</a>
+            <a href="tutorial.html">Tutorial</a>
+        </div>
     </div>
 </body>
 </html>
